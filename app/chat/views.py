@@ -60,7 +60,7 @@ def after_request(response):
 #
 # @chat.errorhandler(500)
 # def internal_error(error):
-#     db.session.rollback()
+# db.session.rollback()
 #     return render_template('500.html'), 500
 
 
@@ -151,7 +151,7 @@ def room_select(id=None):
 def room_add():
     form = RoomAddForm()
     if form.validate_on_submit():
-        room = Room(name=cleaner.clean_html(form.name.data), owner=g.user)
+        room = Room(name=fromstring(cleaner.clean_html(form.name.data)).text, owner=g.user)
         db.session.add(room)
         db.session.commit()
         session['name'] = g.user.nickname
