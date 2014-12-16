@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    {% include 'flash_message.html' %}
+    <div class="well">
+        <p><a href="{{ url_for('.room_select') }}" class="btn btn-default">Select an existing room</a></p>
+        <form class="form-horizontal" action="" method="post" name="post">
+            {{ form.hidden_tag() }}
+            <div class="input-group">
+                {{ form.name(size=32, maxlength=32, class='form-control', placeholder='Type a name for the new room') }}
+                {% for error in form.errors.name %}
+                    <span class="help-inline">{{ error }}</span><br>
+                {% endfor %}
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </span>
+            </div>
+        </form>
+    </div>
+{% endblock %}

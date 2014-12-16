@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Please Sign In{% endblock %}
+
+{% block content %}
+    <script src="/static/js/openid.js"></script>
+    {% include 'flash_message.html' %}
+    <div class="well">
+        <h3>Please Sign In</h3>
+
+        <form class="form" action="" method="post" name="login">
+            {{ form.hidden_tag() }}
+
+            <div class="input-group">
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                            aria-expanded="false">Select OpenID provider <span class="caret"></span></button>
+                    <ul class="dropdown-menu" role="menu">
+                        {% for pr in providers %}
+                            <li><a href="javascript:set_openid('{{ pr.url }}', '{{ pr.name }}');"><img
+                                    src="/static/img/{{ pr.name.lower() }}.png" class="img-polaroid"
+                                    style="margin:2px;"/></a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {{ form.openid(size=80, class="form-control") }}
+                {% for error in form.errors.openid %}
+                    <span class="help-inline">{{ error }}</span><br>
+                {% endfor %}
+            </div>
+
+            <div class="checkbox">
+                <label>
+                    {{ form.remember_me }} Remember Me
+                </label>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <input class="btn btn-primary" type="submit" value="Sign In">
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

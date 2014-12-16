@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    {% include 'flash_message.html' %}
+    <div class="well">
+        <form class="form-horizontal" action="" method="post" name="edit">
+            {{ form.hidden_tag() }}
+            <div class="input-group{% if form.errors.nickname %} error{% endif %}">
+                {{ form.nickname(maxlength=64, class='form-control') }}
+                {% for error in form.errors.nickname %}
+                    <span class="help-inline">{{ error }}</span><br>
+                {% endfor %}
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                </span>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to JustChat{% endblock %}
+
+{% block content %}
+    <h1>Welcome to JustChat!</h1>
+    {% include 'flash_message.html' %}
+    {% if g.user.is_authenticated() %}
+        <div class="well">
+            <p>We have long worked on the creation of this chat and happy to offer You to use it for its intended
+                purpose.</p>
+
+            <p>To start chatting to need <a href="{{ url_for('.room_select') }}">find</a> a suitable room or <a
+                    href="{{ url_for('.room_add') }}">create</a> your own.</p>
+            Lots of fun.
+        </div>
+    {% else %}
+        <div class="well">
+            <p>We have long worked on the creation of this chat and happy to offer You to use it for its intended
+                purpose.</p>
+
+            <p>To start chatting need to <a href="{{ url_for('.login') }}">log in</a> with OpenID, and then find a
+                suitable room or create your own.</p>
+            Lots of fun.
+        </div>
+    {% endif %}
+{% endblock %}

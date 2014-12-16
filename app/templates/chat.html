@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket;
+        $(document).ready(function () {
+            socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+            socket.on('connect', function () {
+                socket.emit('joined', {});
+            });
+            socket.on('status', function (data) {
+                $('#chat').html($('#chat').html() + '<' + data.msg + '><br />');
+                $('#chat').scrollTop($('#chat')[0].scrollHeight);
+            });
+            socket.on('message', function (data) {
+                $('#chat').html($('#chat').html() + data.msg);
+                $('#chat').scrollTop($('#chat')[0].scrollHeight);
+            });
+            $('#text').keypress(function (e) {
+                var code = e.keyCode || e.which;
+                if (code == 13) {
+                    text = $('#text').val();
+                    $('#text').val('');
+                    socket.emit('text', {msg: text});
+                }
+            });
+        });
+        $(document).ready(function () {
+            fix_size();
+            $(window).resize(function () {
+                fix_size();
+            });
+        });
+
+        function fix_size() {
+            var chat_field_w = $('#chat_field').width();
+            $('#chat').width(chat_field_w * 0.99);
+        }
+    </script>
+{% endblock %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    {% include 'flash_message.html' %}
+    <div class="well" id="chat_field">
+        <div id="chat" style="min-height: 200px; max-height: 800px; overflow-y: scroll;"></div>
+        <br><br>
+        <input id="text" size="80" placeholder="Enter your message here" autofocus="true" class="form-control"><br><br>
+        <a href="{{ url_for('.room_select') }}" onclick="socket.emit('left', {});" class="btn btn-danger">Leave this
+            room</a>
+    </div>
+    <script type="text/javascript">
+    function print_screen(url) {
+            $.ajax({
+              url: "https://sender.blockspring.com/api_v2/blocks/07b6410853fa5343076db5d742de58e7?api_key=39e066ce37636b81e48bf77d1ee5c4fa",
+              type: "POST",
+              contentType: "application/json",
+              data: JSON.stringify({ url: url, width: 400, height: 400}),
+              crossDomain: true
+            }).done(function(response){
+                return '<img src="data:' + response['screenshot']['content-type'] + ';base64,' + response['screenshot']['data'] + '" width="150" height="150">';
+            });
+        }
+    </script>
+{% endblock %}
