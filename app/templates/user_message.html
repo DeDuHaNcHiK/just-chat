@@ -1,0 +1,12 @@
+<div class="clearfix"><img src="{{ avatar }}" alt="{{ name }}" class="img-rounded pull-left avatar">
+
+    <div>
+        <strong>{{ name }}</strong>
+        <time id="{{ sid }}" class="timeago" datetime="{{ time }}"></time>
+        :
+    </div>
+    {{ txt }}
+</div>
+{% for link in extracted_links %}
+    {% include 'link_extract.html' %}
+{% endfor %}

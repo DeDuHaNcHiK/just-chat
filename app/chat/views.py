@@ -9,12 +9,13 @@ from app.chat import chat, lm, db, oid
 from app.chat.forms import LoginForm, RoomAddForm, ChangeNicknameForm
 from app.chat.models import User, ROLE_USER, Room
 from config import DATABASE_QUERY_TIMEOUT, OPENID_PROVIDERS
-from flask import g, render_template, flash, url_for, request, session, redirect
+from flask import g, render_template, flash, url_for, request, session, redirect, render_template_string
 from flask.ext.login import current_user, logout_user, login_user, login_required
 from flask.ext.socketio import join_room, emit, leave_room
 from flask.ext.sqlalchemy import get_debug_queries
 from lxml.html import fromstring, iterlinks, make_links_absolute
 from lxml.html.clean import Cleaner, autolink_html
+from markupsafe import Markup
 
 
 cleaner = Cleaner(
@@ -175,15 +176,10 @@ def joined(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     join_room(room)
-    msg = u'''<div class="clearfix"><img src="{}" alt="{}" class="img-rounded pull-left avatar"><div>
-            <i><strong>{}</strong></i> <i id="{sid}"></i>
-            <script>$('#{sid}').text(moment("{}").calendar());</script></div>
-            <i> has entered the room.</i></div>'''.format(
-        session.get('avatar'),
+    msg = find_links_in_message(
+        u'<i> has entered the <strong>#{}</strong> room.</i>'.format(room),
         session.get('name'),
-        session.get('name'),
-        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z"),
-        sid=md5(session.get('name')+datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z")).hexdigest()
+        session.get('avatar')
     )
     emit('status', {'msg': msg}, room=room)
 
@@ -193,7 +189,11 @@ def left(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
     room = session.get('room')
-    text = find_links_in_message(message['msg'], session.get('name'), session.get('avatar'))
+    text = find_links_in_message(
+        message['msg'],
+        session.get('name'),
+        session.get('avatar')
+    )
     emit('message', {
         'msg': text,
     }, room=room)
@@ -205,15 +205,10 @@ def left(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     leave_room(room)
-    msg = u'''<div class="clearfix"><img src="{}" alt="{}" class="img-rounded pull-left avatar"><div>
-            <i><strong>{}</strong></i> <i id="{sid}"></i>
-            <script>$('#{sid}').text(moment("{}").calendar());</script></div>
-            <i> has left the room.</i></div>'''.format(
-        session.get('avatar'),
+    msg = find_links_in_message(
+        u'<i> has left the <strong>#{}</strong> room.</i>'.format(room),
         session.get('name'),
-        session.get('name'),
-        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z"),
-        sid=md5(session.get('name')+datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z")).hexdigest()
+        session.get('avatar')
     )
     emit('status', {
         'msg': msg
@@ -221,53 +216,59 @@ def left(message):
 
 
 def find_links_in_message(text, name, avatar):
-    user_info = u'''<div class="clearfix"><img src="{}" alt="{}" class="img-rounded pull-left avatar"><div>
-            <strong>{}</strong>
-                <i id="{sid}"></i><script>$('#{sid}').text(moment("{}").calendar());</script>:
-        </div>'''.format(
-        avatar,
-        name,
-        name,
-        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z"),
-        sid=md5(name+datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z")).hexdigest()
+    link_list = [i for i in iterlinks(autolink_html(text))]
+    extracted_links = list()
+    for link in link_list:
+        extract_dict = extract_link(link)
+        if extract_dict:
+            extracted_links.append(extract_dict)
+
+    user_info = render_template(
+        'user_message.html',
+        avatar=avatar,
+        name=name,
+        time=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z"),
+        sid=md5(name + datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z")).hexdigest(),
+        txt=Markup(autolink_html(cleaner.clean_html(text))),
+        extracted_links=extracted_links
     )
 
-    result = autolink_html(cleaner.clean_html(text)) + u'</div>'
+    return user_info
 
-    link_list = [i for i in iterlinks(autolink_html(text))]
-    result_links = ''
-    for link in link_list:
-        url = link[2]
-        content = urllib.urlopen(url).read()
-        doc = make_links_absolute(fromstring(content), url)
 
-        title = doc.xpath('//h1')
+def extract_link(link):
+    url = link[2]
+    content = urllib.urlopen(url).read()
+    doc = make_links_absolute(fromstring(content), url)
+
+    title = doc.xpath('//h1')
+    try:
+        title_text = doc.xpath('.//title')[0].text
+        parent_wrap = title[0].getparent()
+    except IndexError:
+        title_text = url
         try:
-            title_text = doc.xpath('.//title')[0].text
-            parent_wrap = title[0].getparent()
-        except IndexError:
-            title_text = url
-            try:
-                parent_wrap = title.getparent()
-            except:
-                return user_info+result
+            parent_wrap = title.getparent()
+        except:
+            return None
 
-        try:
-            paragraph = parent_wrap.xpath('.//p')[0].text_content()
-        except IndexError:
-            paragraph = parent_wrap.text_content()
-        except AttributeError:
-            return user_info+result
-        try:
-            img = u'<img src="{}" style="max-width: 80%;">'.format(parent_wrap.xpath('.//img')[0].values()[0])
-        except IndexError:
-            img = u''
-        except AttributeError:
-            return user_info+result
-        result_links += u'''<blockquote><a href="{}" target="_blank">{}</a>
-          <p>{}</p>
-          {}
-          <small>{}</small>
-        </blockquote>'''.format(link[2], title_text, paragraph[:400], img, urlparse(link[2]).hostname)
+    try:
+        paragraph = parent_wrap.xpath('.//p')[0].text_content()
+    except IndexError:
+        paragraph = parent_wrap.text_content()
+    except AttributeError:
+        return None
+    try:
+        img = parent_wrap.xpath('.//img')[0].values()[0]
+    except IndexError:
+        img = None
+    except AttributeError:
+        return None
 
-    return user_info+result+result_links
+    return {
+        'img': img,
+        'url': link[2],
+        'title': title_text,
+        'paragraph': paragraph[:400],
+        'hostname': urlparse(link[2]).hostname
+    }

@@ -12,10 +12,12 @@
             socket.on('status', function (data) {
                 $('#chat').html($('#chat').html() + data.msg + '<br />');
                 $('#chat').scrollTop($('#chat')[0].scrollHeight);
+                $("time.timeago").timeago();
             });
             socket.on('message', function (data) {
                 $('#chat').html($('#chat').html() + data.msg);
                 $('#chat').scrollTop($('#chat')[0].scrollHeight);
+                $("time.timeago").timeago();
             });
             $('#text').keypress(function (e) {
                 var code = e.keyCode || e.which;
@@ -23,12 +25,14 @@
                     text = $('#text').val();
                     $('#text').val('');
                     socket.emit('text', {msg: text});
+                    $("time.timeago").timeago();
                 }
             });
             $('#say_button').on('click', function (e) {
                 text = $('#text').val();
                 $('#text').val('');
                 socket.emit('text', {msg: text});
+                $("time.timeago").timeago();
             });
         });
         $(document).ready(function () {
@@ -50,8 +54,8 @@
 {% block content %}
     <h1>{{ title }}</h1>
     {% include 'flash_message.html' %}
-    <div class="well" id="chat_field">
-        <div id="chat" style="min-height: 200px; max-height: 800px; overflow-y: scroll;"></div>
+    <div class="well" id="chat_field" style="height: 75%">
+        <div id="chat" style="min-height: 200px; max-height: 800px; overflow-y: scroll; height: 70%;"></div>
         <br><br>
         <input id="text" size="80" placeholder="Enter your message here" autofocus="true" class="form-control"><br><br>
         <a href="#" class="btn btn-primary left" id="say_button">Say!</a>
