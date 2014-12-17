@@ -1,0 +1,6 @@
+.img-circle, .img-rounded, .img-thumbnail {
+    margin: 5px;
+}
+blockquote footer:before, blockquote small:before, blockquote .small:before {
+    content: " ";
+}

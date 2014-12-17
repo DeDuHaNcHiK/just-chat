@@ -10,7 +10,7 @@
                 socket.emit('joined', {});
             });
             socket.on('status', function (data) {
-                $('#chat').html($('#chat').html() + '<' + data.msg + '><br />');
+                $('#chat').html($('#chat').html() + data.msg + '<br />');
                 $('#chat').scrollTop($('#chat')[0].scrollHeight);
             });
             socket.on('message', function (data) {
@@ -24,6 +24,11 @@
                     $('#text').val('');
                     socket.emit('text', {msg: text});
                 }
+            });
+            $('#say_button').on('click', function (e) {
+                text = $('#text').val();
+                $('#text').val('');
+                socket.emit('text', {msg: text});
             });
         });
         $(document).ready(function () {
@@ -49,20 +54,9 @@
         <div id="chat" style="min-height: 200px; max-height: 800px; overflow-y: scroll;"></div>
         <br><br>
         <input id="text" size="80" placeholder="Enter your message here" autofocus="true" class="form-control"><br><br>
-        <a href="{{ url_for('.room_select') }}" onclick="socket.emit('left', {});" class="btn btn-danger">Leave this
+        <a href="#" class="btn btn-primary left" id="say_button">Say!</a>
+        <a href="{{ url_for('.room_select') }}" onclick="socket.emit('left', {});" class="btn btn-danger pull-right">Leave
+            this
             room</a>
     </div>
-    <script type="text/javascript">
-    function print_screen(url) {
-            $.ajax({
-              url: "https://sender.blockspring.com/api_v2/blocks/07b6410853fa5343076db5d742de58e7?api_key=39e066ce37636b81e48bf77d1ee5c4fa",
-              type: "POST",
-              contentType: "application/json",
-              data: JSON.stringify({ url: url, width: 400, height: 400}),
-              crossDomain: true
-            }).done(function(response){
-                return '<img src="data:' + response['screenshot']['content-type'] + ';base64,' + response['screenshot']['data'] + '" width="150" height="150">';
-            });
-        }
-    </script>
 {% endblock %}

@@ -1,5 +1,8 @@
 # coding: utf-8
 from datetime import datetime
+import urllib
+from urlparse import urlparse
+from hashlib import md5
 
 from app import socketio
 from app.chat import chat, lm, db, oid
@@ -10,7 +13,7 @@ from flask import g, render_template, flash, url_for, request, session, redirect
 from flask.ext.login import current_user, logout_user, login_user, login_required
 from flask.ext.socketio import join_room, emit, leave_room
 from flask.ext.sqlalchemy import get_debug_queries
-from lxml.html import fromstring
+from lxml.html import fromstring, iterlinks, make_links_absolute
 from lxml.html.clean import Cleaner, autolink_html
 
 
@@ -53,15 +56,9 @@ def after_request(response):
     return response
 
 
-# @chat.errorhandler(404)
-# def not_found_error(error):
-# return render_template('404.html'), 404
-#
-#
-# @chat.errorhandler(500)
-# def internal_error(error):
-# db.session.rollback()
-#     return render_template('500.html'), 500
+@chat.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
 
 
 @chat.route('/')
@@ -140,6 +137,7 @@ def room_select(id=None):
     if id is not None:
         room = Room.query.get(id)
         session['name'] = g.user.nickname
+        session['avatar'] = g.user.avatar('48x48')
         session['room'] = room.name
         return redirect(url_for('.chat'))
     rooms = Room.query.all()
@@ -155,6 +153,7 @@ def room_add():
         db.session.add(room)
         db.session.commit()
         session['name'] = g.user.nickname
+        session['avatar'] = g.user.avatar('48x48')
         session['room'] = form.name.data
         return redirect(url_for('.chat'))
     return render_template('room_add.html', title='Create new room', form=form)
@@ -176,7 +175,17 @@ def joined(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     join_room(room)
-    emit('status', {'msg': u'<i><strong>{}</strong> has entered the room.</i>'.format(session.get('name'))}, room=room)
+    msg = u'''<div class="clearfix"><img src="{}" alt="{}" class="img-rounded pull-left avatar"><div>
+            <i><strong>{}</strong></i> <i id="{sid}"></i>
+            <script>$('#{sid}').text(moment("{}").calendar());</script></div>
+            <i> has entered the room.</i></div>'''.format(
+        session.get('avatar'),
+        session.get('name'),
+        session.get('name'),
+        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z"),
+        sid=md5(session.get('name')+datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z")).hexdigest()
+    )
+    emit('status', {'msg': msg}, room=room)
 
 
 @socketio.on('text', namespace='/chat')
@@ -184,7 +193,7 @@ def left(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
     room = session.get('room')
-    text = find_links_in_message(message['msg'], session.get('name'))
+    text = find_links_in_message(message['msg'], session.get('name'), session.get('avatar'))
     emit('message', {
         'msg': text,
     }, room=room)
@@ -196,13 +205,69 @@ def left(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     leave_room(room)
-    emit('status', {'msg': u'<i><strong>{}</strong> has left the room.</i>'.format(session.get('name'))}, room=room)
+    msg = u'''<div class="clearfix"><img src="{}" alt="{}" class="img-rounded pull-left avatar"><div>
+            <i><strong>{}</strong></i> <i id="{sid}"></i>
+            <script>$('#{sid}').text(moment("{}").calendar());</script></div>
+            <i> has left the room.</i></div>'''.format(
+        session.get('avatar'),
+        session.get('name'),
+        session.get('name'),
+        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z"),
+        sid=md5(session.get('name')+datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z")).hexdigest()
+    )
+    emit('status', {
+        'msg': msg
+    }, room=room)
 
 
-def find_links_in_message(text, name):
-    html = fromstring(text)
-    result = u'<strong>{}:</strong> '.format(name)
-    for i in html.itertext():
-        result += autolink_html(i)
+def find_links_in_message(text, name, avatar):
+    user_info = u'''<div class="clearfix"><img src="{}" alt="{}" class="img-rounded pull-left avatar"><div>
+            <strong>{}</strong>
+                <i id="{sid}"></i><script>$('#{sid}').text(moment("{}").calendar());</script>:
+        </div>'''.format(
+        avatar,
+        name,
+        name,
+        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z"),
+        sid=md5(name+datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z")).hexdigest()
+    )
 
-    return cleaner.clean_html(result)
+    result = autolink_html(cleaner.clean_html(text)) + u'</div>'
+
+    link_list = [i for i in iterlinks(autolink_html(text))]
+    result_links = ''
+    for link in link_list:
+        url = link[2]
+        content = urllib.urlopen(url).read()
+        doc = make_links_absolute(fromstring(content), url)
+
+        title = doc.xpath('//h1')
+        try:
+            title_text = doc.xpath('.//title')[0].text
+            parent_wrap = title[0].getparent()
+        except IndexError:
+            title_text = url
+            try:
+                parent_wrap = title.getparent()
+            except:
+                return user_info+result
+
+        try:
+            paragraph = parent_wrap.xpath('.//p')[0].text_content()
+        except IndexError:
+            paragraph = parent_wrap.text_content()
+        except AttributeError:
+            return user_info+result
+        try:
+            img = u'<img src="{}" style="max-width: 80%;">'.format(parent_wrap.xpath('.//img')[0].values()[0])
+        except IndexError:
+            img = u''
+        except AttributeError:
+            return user_info+result
+        result_links += u'''<blockquote><a href="{}" target="_blank">{}</a>
+          <p>{}</p>
+          {}
+          <small>{}</small>
+        </blockquote>'''.format(link[2], title_text, paragraph[:400], img, urlparse(link[2]).hostname)
+
+    return user_info+result+result_links
