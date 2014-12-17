@@ -19,11 +19,11 @@ OPENID_PROVIDERS = [
     {'name': 'Google', 'url': 'https://www.google.com/accounts/o8/id'},
     {'name': 'Yahoo', 'url': 'https://me.yahoo.com'},
     {'name': 'Yandex', 'url': 'http://openid.yandex.ru/<username>'},
-    {'name': 'AOL', 'url': 'http://openid.aol.com/<username>'},
-    {'name': 'Flickr', 'url': 'http://www.flickr.com/<username>'},
-    {'name': 'MyOpenID', 'url': 'https://www.myopenid.com'},
-    {'name': 'LiveJournal', 'url': '<username>.livejournal.com'},
-    {'name': 'WordPress.com', 'url': '<username>.wordpress.com'}
+    # {'name': 'AOL', 'url': 'http://openid.aol.com/<username>'},
+    # {'name': 'Flickr', 'url': 'http://www.flickr.com/<username>'},
+    # {'name': 'MyOpenID', 'url': 'https://www.myopenid.com'},
+    # {'name': 'LiveJournal', 'url': '<username>.livejournal.com'},
+    # {'name': 'WordPress.com', 'url': '<username>.wordpress.com'}
     ]
 
 # email server

@@ -29,6 +29,7 @@ itsdangerous==0.24
 lxml==3.4.1
 pbr==0.10.0
 psycopg2==2.5.4
+pycurl==7.19.5
 python-openid==2.2.5
 pytz==2014.10
 six==1.8.0
