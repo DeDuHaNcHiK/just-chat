@@ -1,0 +1,70 @@
+body {
+	background: #EEE;
+}
+
+#content {
+	background: white;
+	border: 1px solid #CCC;
+	padding: 15px 20px 30px 35px;
+}
+
+#content .row {
+    margin-left: 0px;
+}
+
+#brand {
+    display: inline;
+}
+
+.search-form {
+	margin: 0 5px;
+}
+
+.search-form form {
+	margin: 0;
+}
+
+.btn-menu {
+    margin: 4px 5px 0 0;
+    float: right;
+}
+
+.btn-menu a, .btn-menu input {
+	padding: 7px 16px !important;
+	border-radius: 1px !important;
+	border-color: #ccc;
+}
+
+.btn, textarea, input[type], button, .model-list {
+	border-radius: 0;
+}
+
+.btn-cancel {
+	background-image: linear-gradient(to bottom, #ffe5e5 0px, #f0b8b8 100%);
+	background-repeat: repeat-x;
+}
+
+.btn-cancel:hover {
+	background-color: #f0b8b8;
+	background-position: 0 -5px;
+}
+
+a.btn-cancel {
+	border-radius: 0;
+}
+
+.model-list {
+	border-radius: 0;
+}
+
+.nav-pills li > a {
+	border-radius: 0;
+}
+
+.select2-container .select2-choice {
+	border-radius: 0;
+}
+
+a.dropdown-toggle b.caret {
+    margin-left: 5px;
+}

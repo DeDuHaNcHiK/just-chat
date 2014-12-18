@@ -42,6 +42,9 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if g.user.is_authenticated() %}
+                    {% if g.user.is_admin() %}
+                    <li><a href="{{ url_for('admin.index') }}">Admin Interface</a></li>
+                    {% endif %}
                     <li><a href="{{ url_for('.change_nickname') }}">Rename</a></li>
                     <li><a href="{{ url_for('.logout') }}">Logout</a></li>
                 {% else %}

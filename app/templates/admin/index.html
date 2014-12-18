@@ -1,0 +1,15 @@
+{% extends 'admin/master.html' %}
+
+
+{% block body %}
+    {{ super() }}
+    <div class="row">
+        <h2>Flask-Admin</h2>
+
+        <p class="lead">
+            For customize the layout main page, edit <code>/templates/admin/index.html</code>
+        </p>
+
+        <a class="btn btn-primary" href="/"><i class="icon-arrow-left icon-white"></i> Main page</a>
+    </div>
+{% endblock body %}

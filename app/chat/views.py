@@ -9,7 +9,7 @@ from app.chat import chat, lm, db, oid
 from app.chat.forms import LoginForm, RoomAddForm, ChangeNicknameForm
 from app.chat.models import User, ROLE_USER, Room
 from config import DATABASE_QUERY_TIMEOUT, OPENID_PROVIDERS
-from flask import g, render_template, flash, url_for, request, session, redirect, render_template_string
+from flask import g, render_template, flash, url_for, request, session, redirect
 from flask.ext.login import current_user, logout_user, login_user, login_required
 from flask.ext.socketio import join_room, emit, leave_room
 from flask.ext.sqlalchemy import get_debug_queries

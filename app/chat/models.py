@@ -1,6 +1,9 @@
 # coding: utf-8
 from hashlib import md5
-from app.chat import db
+
+from app.chat import db, admin
+from flask.ext.admin.contrib.sqla import ModelView
+from flask.ext.login import current_user
 import re
 
 
@@ -16,6 +19,9 @@ class User(db.Model):
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime)
     rooms = db.relationship('Room', backref='owner', lazy='dynamic')
+
+    def is_admin(self):
+        return self.role == ROLE_ADMIN
 
     def is_authenticated(self):
         return True
@@ -52,8 +58,33 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % (self.nickname,)
 
+    def __unicode__(self):
+        return self.nickname
+
 
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), index=True, unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __unicode__(self):
+        return self.name
+
+
+class CustomView(ModelView):
+    list_template = 'admin/admin_list.html'
+    create_template = 'admin/admin_create.html'
+    edit_template = 'admin/admin_edit.html'
+
+    def is_accessible(self):
+        if current_user.is_authenticated():
+            return current_user.is_admin()
+        return False
+
+
+class UserAdmin(CustomView):
+    column_searchable_list = ('nickname', 'email',)
+    column_filters = ('last_seen', 'role', 'email')
+
+
+admin.add_view(UserAdmin(User, db.session))
