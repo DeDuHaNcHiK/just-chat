@@ -9,3 +9,8 @@ blockquote footer:before, blockquote small:before, blockquote .small:before {
 blockquote {
     font-size: 14px;
 }
+
+div.SearchCountingWords textarea {
+    height: 40%;
+    width: 100%;
+}

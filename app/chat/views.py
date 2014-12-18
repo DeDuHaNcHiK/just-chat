@@ -68,6 +68,11 @@ def index():
     return render_template('index.html')
 
 
+@chat.route('/js_form')
+def js_form():
+    return render_template('js_form.html', title='JS Form')
+
+
 @chat.route('/login', methods=['GET', 'POST'])
 @oid.loginhandler
 def login():

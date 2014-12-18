@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_head %}
+    <script src="http://fb.me/react-0.12.1.js"></script>
+    <script src="http://fb.me/JSXTransformer-0.12.1.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    {% include 'flash_message.html' %}
+    <div class="well">
+    <div id="form"></div>
+    </div>
+    <script src="/static/js/search-counting-words.js" type="text/jsx"></script>
+{% endblock %}
