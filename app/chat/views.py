@@ -135,6 +135,7 @@ def change_nickname():
         return redirect(url_for('.change_nickname'))
     else:
         form.nickname.data = g.user.nickname
+        form.about_me.data = g.user.about_me
     return render_template('change_nickname.html', form=form, title='Change nickname')
 
 
