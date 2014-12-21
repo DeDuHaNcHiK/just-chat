@@ -1,7 +1,7 @@
 <div class="clearfix"><img src="{{ avatar }}" alt="{{ name }}" class="img-rounded pull-left avatar">
 
     <div>
-        <strong>{{ name }}</strong>
+        <strong><a href="{{ url_for('chat.user', nickname=name) }}" target="_blank">{{ name }}</a></strong>
         <time id="{{ sid }}" class="timeago" datetime="{{ time }}"></time>
         :
     </div>

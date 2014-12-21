@@ -4,6 +4,7 @@ import urllib
 from urlparse import urlparse
 from hashlib import md5
 
+import re
 from app import socketio
 from app.chat import chat, lm, db, oid
 from app.chat.forms import LoginForm, RoomAddForm, ChangeNicknameForm
@@ -127,6 +128,7 @@ def change_nickname():
     form = ChangeNicknameForm(g.user.nickname)
     if form.validate_on_submit():
         g.user.nickname = form.nickname.data
+        g.user.about_me = form.about_me.data
         db.session.add(g.user)
         db.session.commit()
         flash('Your changes have been saved.')
@@ -136,12 +138,29 @@ def change_nickname():
     return render_template('change_nickname.html', form=form, title='Change nickname')
 
 
+@chat.route('/user/<nickname>')
+@login_required
+def user(nickname):
+    user = User.query.filter_by(nickname=nickname).first()
+    if user is None:
+        flash('User {} not found.'.format(nickname))
+        return redirect(url_for('.index'))
+    return render_template('user.html', user=user)
+
+
 @chat.route('/room')
 @chat.route('/room/<int:id>')
+@chat.route('/room/<name>')
 @login_required
-def room_select(id=None):
+def room_select(id=None, name=None):
     if id is not None:
         room = Room.query.get(id)
+        session['name'] = g.user.nickname
+        session['avatar'] = g.user.avatar('48x48')
+        session['room'] = room.name
+        return redirect(url_for('.chat'))
+    if name is not None:
+        room = Room.query.filter_by(name=name).first()
         session['name'] = g.user.nickname
         session['avatar'] = g.user.avatar('48x48')
         session['room'] = room.name
@@ -182,7 +201,7 @@ def joined(message):
     room = session.get('room')
     join_room(room)
     msg = find_links_in_message(
-        u'<i> has entered the <strong>#{}</strong> room.</i>'.format(room),
+        u'<i> has entered the <strong>${}</strong> room.</i>'.format(room),
         session.get('name'),
         session.get('avatar')
     )
@@ -211,13 +230,23 @@ def left(message):
     room = session.get('room')
     leave_room(room)
     msg = find_links_in_message(
-        u'<i> has left the <strong>#{}</strong> room.</i>'.format(room),
+        u'<i> has left the <strong>${}</strong> room.</i>'.format(room),
         session.get('name'),
         session.get('avatar')
     )
     emit('status', {
         'msg': msg
     }, room=room)
+
+
+def add_user_link(matchobj):
+    return u'<a href="{}" target="_blank">{}</a>'.format(
+        url_for('chat.user', nickname=matchobj.group(0).replace('#', '')), matchobj.group(0))
+
+
+def add_room_link(matchobj):
+    return u'<a href="{}" target="_blank">{}</a>'.format(
+        url_for('chat.room_select', name=matchobj.group(0).replace('$', '')), matchobj.group(0))
 
 
 def find_links_in_message(text, name, avatar):
@@ -228,13 +257,16 @@ def find_links_in_message(text, name, avatar):
         if extract_dict:
             extracted_links.append(extract_dict)
 
+    txt = autolink_html(cleaner.clean_html(text))
+    txt = re.sub(ur'(#[а-яА-ЯёЁA-Za-z0-9-]+)', add_user_link, txt)
+    txt = re.sub(ur'(\$[а-яА-ЯёЁA-Za-z0-9-]+)', add_room_link, txt)
     user_info = render_template(
         'user_message.html',
         avatar=avatar,
         name=name,
         time=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z"),
         sid=md5(name + datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S Z")).hexdigest(),
-        txt=Markup(autolink_html(cleaner.clean_html(text))),
+        txt=Markup(txt),
         extracted_links=extracted_links
     )
 

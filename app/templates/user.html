@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% include 'flash_message.html' %}
+    <div class="well well-large" style="min-height: 160px;">
+        <div class="pull-right">
+            <img src="{{ user.avatar(128) }}" class="img-polaroid">
+        </div>
+        <h1>{{ user.nickname }}</h1>
+        {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
+        {% if user.last_seen %}
+            <p><em>Last seen on:
+                <time class="timeago" datetime="{{ user.last_seen.strftime("%Y-%m-%dT%H:%M:%S Z") }}"></time>
+            </em></p>{% endif %}
+        {% if user == g.user %}
+            <a href="{{ url_for('.change_nickname') }}" class="btn btn-primary">Edit my info</a>
+        {% endif %}
+    </div>
+    <script type="application/javascript">
+        $("time.timeago").timeago();
+    </script>
+{% endblock %}

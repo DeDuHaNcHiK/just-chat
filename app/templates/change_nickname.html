@@ -8,14 +8,22 @@
     <div class="well">
         <form class="form-horizontal" action="" method="post" name="edit">
             {{ form.hidden_tag() }}
-            <div class="input-group{% if form.errors.nickname %} error{% endif %}">
+            {{ form.nickname.label }}
+            <div class="form-group{% if form.errors.nickname %} error{% endif %}">
                 {{ form.nickname(maxlength=64, class='form-control') }}
                 {% for error in form.errors.nickname %}
                     <span class="help-inline">{{ error }}</span><br>
                 {% endfor %}
-                <span class="input-group-btn">
+            </div>
+            {{ form.about_me.label }}
+            <div class="form-group{% if form.errors.about_me %} error{% endif %}">
+                {{ form.about_me(class='form-control') }}
+                {% for error in form.errors.about_me %}
+                    <span class="help-inline">{{ error }}</span><br>
+                {% endfor %}
+            </div>
+            <div class="form-group">
                     <button class="btn btn-primary" type="submit">Save</button>
-                </span>
             </div>
         </form>
     </div>

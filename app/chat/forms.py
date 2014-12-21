@@ -1,8 +1,8 @@
 # coding: utf-8
 from app.chat.models import User
 from flask.ext.wtf import Form
-from wtforms import StringField, BooleanField
-from wtforms.validators import DataRequired
+from wtforms import StringField, BooleanField, TextAreaField
+from wtforms.validators import DataRequired, Length
 
 
 class LoginForm(Form):
@@ -15,7 +15,8 @@ class RoomAddForm(Form):
 
 
 class ChangeNicknameForm(Form):
-    nickname = StringField('nickname', validators=[DataRequired()])
+    nickname = StringField('Nickname', validators=[DataRequired()])
+    about_me = TextAreaField('About me', validators=[Length(min=0, max=140)])
 
     def __init__(self, orig_nickname, *args, **kwargs):
         super(ChangeNicknameForm, self).__init__(*args, **kwargs)
